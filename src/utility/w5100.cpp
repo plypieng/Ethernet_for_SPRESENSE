@@ -299,11 +299,20 @@ uint16_t W5100Class::write(uint16_t addr, const uint8_t *buf, uint16_t len)
 	if (chip == 51) {
 		for (uint16_t i=0; i<len; i++) {
 			setSS();
+#ifdef ARDUINO_ARCH_SPRESENSE
+			cmd[0] = 0xF0;
+			cmd[1] = addr >> 8;
+			cmd[2] = addr & 0xFF;
+			cmd[3] = buf[i];
+			SPI.transfer(cmd, 4);
+			addr++;
+#else /* !ARDUINO_ARCH_SPRESENSE */
 			SPI.transfer(0xF0);
 			SPI.transfer(addr >> 8);
 			SPI.transfer(addr & 0xFF);
 			addr++;
 			SPI.transfer(buf[i]);
+#endif /* ARDUINO_ARCH_SPRESENSE */
 			resetSS();
 		}
 	} else if (chip == 52) {
@@ -312,6 +321,15 @@ uint16_t W5100Class::write(uint16_t addr, const uint8_t *buf, uint16_t len)
 		cmd[1] = addr & 0xFF;
 		cmd[2] = ((len >> 8) & 0x7F) | 0x80;
 		cmd[3] = len & 0xFF;
+#ifdef ARDUINO_ARCH_SPRESENSE
+		uint8_t *txbuf = (uint8_t*)malloc(4 + len);
+		if (txbuf) {
+			memcpy(txbuf, cmd, 4);
+			memcpy(txbuf + 4, buf, len);
+			SPI.transfer(txbuf, 4 + len);
+			free(txbuf);
+		}
+#else /* !ARDUINO_ARCH_SPRESENSE */
 		SPI.transfer(cmd, 4);
 #ifdef SPI_HAS_TRANSFER_BUF
 		SPI.transfer(buf, NULL, len);
@@ -321,6 +339,7 @@ uint16_t W5100Class::write(uint16_t addr, const uint8_t *buf, uint16_t len)
 			SPI.transfer(buf[i]);
 		}
 #endif
+#endif /* ARDUINO_ARCH_SPRESENSE */
 		resetSS();
 	} else { // chip == 55
 		setSS();
@@ -368,6 +387,15 @@ uint16_t W5100Class::write(uint16_t addr, const uint8_t *buf, uint16_t len)
 			}
 			SPI.transfer(cmd, len + 3);
 		} else {
+#ifdef ARDUINO_ARCH_SPRESENSE
+			uint8_t *txbuf = (uint8_t*)malloc(3 + len);
+			if (txbuf) {
+				memcpy(txbuf, cmd, 3);
+				memcpy(txbuf + 3, buf, len);
+				SPI.transfer(txbuf, 3 + len);
+				free(txbuf);
+			}
+#else /* !ARDUINO_ARCH_SPRESENSE */
 			SPI.transfer(cmd, 3);
 #ifdef SPI_HAS_TRANSFER_BUF
 			SPI.transfer(buf, NULL, len);
@@ -377,6 +405,7 @@ uint16_t W5100Class::write(uint16_t addr, const uint8_t *buf, uint16_t len)
 				SPI.transfer(buf[i]);
 			}
 #endif
+#endif /* ARDUINO_ARCH_SPRESENSE */
 		}
 		resetSS();
 	}
@@ -390,6 +419,15 @@ uint16_t W5100Class::read(uint16_t addr, uint8_t *buf, uint16_t len)
 	if (chip == 51) {
 		for (uint16_t i=0; i < len; i++) {
 			setSS();
+#ifdef ARDUINO_ARCH_SPRESENSE
+			cmd[0] = 0x0F;
+			cmd[1] = addr >> 8;
+			cmd[2] = addr & 0xFF;
+			addr++;
+			cmd[3] = 0;
+			SPI.transfer(cmd, 4);
+			buf[i] = cmd[3];
+#else /* !ARDUINO_ARCH_SPRESENSE */
 			#if 1
 			SPI.transfer(0x0F);
 			SPI.transfer(addr >> 8);
@@ -405,6 +443,7 @@ uint16_t W5100Class::read(uint16_t addr, uint8_t *buf, uint16_t len)
 			buf[i] = cmd[3];
 			addr++;
 			#endif
+#endif /* ARDUINO_ARCH_SPRESENSE */
 			resetSS();
 		}
 	} else if (chip == 52) {
@@ -413,9 +452,20 @@ uint16_t W5100Class::read(uint16_t addr, uint8_t *buf, uint16_t len)
 		cmd[1] = addr & 0xFF;
 		cmd[2] = (len >> 8) & 0x7F;
 		cmd[3] = len & 0xFF;
+#ifdef ARDUINO_ARCH_SPRESENSE
+		uint8_t *rxbuf = (uint8_t*)malloc(4 + len);
+		if (rxbuf) {
+			memcpy(rxbuf, cmd, 4);
+			memset(rxbuf + 4, 0, len);
+			SPI.transfer(rxbuf, 4 + len);
+			memcpy(buf, rxbuf + 4, len);
+			free(rxbuf);
+		}
+#else /* !ARDUINO_ARCH_SPRESENSE */
 		SPI.transfer(cmd, 4);
 		memset(buf, 0, len);
 		SPI.transfer(buf, len);
+#endif /* ARDUINO_ARCH_SPRESENSE */
 		resetSS();
 	} else { // chip == 55
 		setSS();
@@ -457,9 +507,20 @@ uint16_t W5100Class::read(uint16_t addr, uint8_t *buf, uint16_t len)
 			cmd[2] = ((addr >> 6) & 0xE0) | 0x18; // 2K buffers
 			#endif
 		}
+#ifdef ARDUINO_ARCH_SPRESENSE
+		uint8_t *rxbuf = (uint8_t*)malloc(3 + len);
+		if (rxbuf) {
+			memcpy(rxbuf, cmd, 3);
+			memset(rxbuf + 3, 0, len);
+			SPI.transfer(rxbuf, 3 + len);
+			memcpy(buf, rxbuf + 3, len);
+			free(rxbuf);
+		}
+#else /* !ARDUINO_ARCH_SPRESENSE */
 		SPI.transfer(cmd, 3);
 		memset(buf, 0, len);
 		SPI.transfer(buf, len);
+#endif /* ARDUINO_ARCH_SPRESENSE */
 		resetSS();
 	}
 	return len;
