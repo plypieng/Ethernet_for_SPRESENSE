@@ -48,6 +48,11 @@
 #define SPI_ETHERNET_SETTINGS SPISettings(8000000, MSBFIRST, SPI_MODE0)
 #endif
 
+// Spresense's SPI can uses SPI_MODE3 with auto cs control by hardware.
+#if defined(ARDUINO_ARCH_SPRESENSE)
+#undef SPI_ETHERNET_SETTINGS
+#define SPI_ETHERNET_SETTINGS SPISettings(14000000, MSBFIRST, SPI_MODE3)
+#endif
 
 typedef uint8_t SOCKET;
 
@@ -431,6 +436,20 @@ private:
 	}
 	inline static void resetSS() {
 		*(ss_pin_reg+6) = ss_pin_mask;
+	}
+
+#elif defined(ARDUINO_ARCH_SPRESENSE)
+	inline static void initSS() {
+		if (ss_pin != 10)
+			pinMode(ss_pin, OUTPUT);
+	}
+	inline static void setSS() {
+		if (ss_pin != 10)
+			digitalWrite(ss_pin, LOW);
+	}
+	inline static void resetSS() {
+		if (ss_pin != 10)
+			digitalWrite(ss_pin, HIGH);
 	}
 #else
 	inline static void initSS() {
