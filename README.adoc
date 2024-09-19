@@ -1,7 +1,24 @@
-:repository-owner: arduino-libraries
-:repository-name: Ethernet
+:repository-owner: plypieng
+:repository-name: Ethernet_for_SPRESENSE
 
-= {repository-name} Library for Arduino =
+= {repository-name} Library for Arduino SPRESENSE with USR-1 W5500 ethernet module =
+
+A little modified version of Arduino Ethernet library to accommodate Sony SPRESENSE MCU with cheap USR-1 W500 ethernet module
+
+Use 
+----
+#include <Ethernet_for_SPRESENSE.h>
+----
+
+other than the that, API references are all the same as in original Arduino Ethernet Library
+
+== Original library
+
+link:https://github.com/arduino-libraries/Ethernet[Arduino Ethernet Library]
+
+== Below are the original description 
+
+
 
 image:https://github.com/{repository-owner}/{repository-name}/actions/workflows/check-arduino.yml/badge.svg["Check Arduino status", link="https://github.com/{repository-owner}/{repository-name}/actions/workflows/check-arduino.yml"]
 image:https://github.com/{repository-owner}/{repository-name}/actions/workflows/compile-examples.yml/badge.svg["Compile Examples status", link="https://github.com/{repository-owner}/{repository-name}/actions/workflows/compile-examples.yml"]
